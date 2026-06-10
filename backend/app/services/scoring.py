@@ -247,6 +247,8 @@ def calculate_deal_score(
     expected_profit: float,
     db: Optional[Session] = None,
 ) -> dict:
+    # V1.2 — Apply Tampa market intel bonuses
+    from app.services.tampa_market_intel import get_flip_score_bonus, get_vehicle_tier
     price_pts      = score_price(asking_price, estimated_resale)
     reliability_pts = get_reliability_score(make, model, db)
     mileage_pts    = score_mileage(mileage)
@@ -255,10 +257,21 @@ def calculate_deal_score(
     motivation_pts = score_seller_motivation(description)
 
     total = price_pts + reliability_pts + mileage_pts + repair_pts + profit_pts + motivation_pts
+
+    # V1.2 — Apply Tampa market flip score bonus
+    flip_bonus = get_flip_score_bonus(make or "")
+    total += flip_bonus
+
     total = min(100, max(0, total))
+
+    # V1.2 — Track vehicle tier
+    tier_info = get_vehicle_tier(make or "", model or "", 2026)
+    tier = tier_info.get("tier")
 
     return {
         "total": round(total, 1),
+        "flip_bonus": flip_bonus,
+        "tier": tier,
         "breakdown": {
             "price": price_pts,
             "reliability": reliability_pts,

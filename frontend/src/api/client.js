@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const BASE = import.meta.env.VITE_API_URL || '/api'
-const ROLE = import.meta.env.VITE_USER_ROLE || 'owner'
+const ROLE = import.meta.env.VITE_USER_ROLE || 'partner'
 
 const client = axios.create({
   baseURL: BASE,

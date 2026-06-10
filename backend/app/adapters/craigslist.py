@@ -95,6 +95,48 @@ def _parse_year_from_title(title: str) -> Optional[int]:
     return int(match.group()) if match else None
 
 
+def _parse_make_model_from_title(title: str) -> tuple[Optional[str], Optional[str]]:
+    """Extract make and model from title like '2010 Toyota Camry LE' or 'Honda Civic'."""
+    if not title:
+        return None, None
+
+    title = title.strip()
+    words = title.split()
+
+    # Common makes to look for
+    makes = {
+        "toyota": "Toyota", "honda": "Honda", "lexus": "Lexus", "acura": "Acura",
+        "mazda": "Mazda", "subaru": "Subaru", "nissan": "Nissan", "infiniti": "Infiniti",
+        "ford": "Ford", "chevrolet": "Chevrolet", "chevy": "Chevrolet", "gmc": "GMC",
+        "bmw": "BMW", "audi": "Audi", "mercedes": "Mercedes", "vw": "Volkswagen",
+        "hyundai": "Hyundai", "kia": "Kia", "volvo": "Volvo", "jeep": "Jeep",
+    }
+
+    make = None
+    make_idx = -1
+
+    # Find make in title
+    for i, word in enumerate(words):
+        word_lower = word.lower().rstrip(",.!?;:")
+        if word_lower in makes:
+            make = makes[word_lower]
+            make_idx = i
+            break
+
+    if not make:
+        return None, None
+
+    # Model is typically the word(s) after make (before trim/year)
+    model = None
+    if make_idx + 1 < len(words):
+        next_word = words[make_idx + 1].rstrip(",.!?;:")
+        # Skip if it's a year or common trim
+        if not re.match(r'^\d{4}$', next_word) and next_word.lower() not in ['le', 'se', 'lx', 'ex', 'gl', 'gls', 'sport', 'limited', 'base', 'turbo']:
+            model = next_word.capitalize()
+
+    return make, model
+
+
 def _is_dealer(title: str, description: str = "") -> bool:
     dealer_signals = ["dealer", "dealership", "financing", "warranty", "certified", "we finance"]
     text = f"{title} {description}".lower()
@@ -170,6 +212,7 @@ def _decode_item(item: list, decode: dict, subdomain: str, search_category: str)
         location_name = loc_descs[loc_desc_idx] if loc_desc_idx < len(loc_descs) else site.title()
 
         year = _parse_year_from_title(title)
+        make, model = _parse_make_model_from_title(title)
         external_id = str(posting_id)
 
         return {
@@ -179,6 +222,8 @@ def _decode_item(item: list, decode: dict, subdomain: str, search_category: str)
             "price": price,
             "mileage": mileage,
             "year": year,
+            "make": make,
+            "model": model,
             "location": location_name,
             "image_url": photos[0] if photos else None,
             "photos": photos,
