@@ -84,7 +84,7 @@ const DEFAULT_FORM = {
 
 export default function SearchCenter() {
   const [form, setForm] = useState(DEFAULT_FORM)
-  const [enabledSources, setEnabledSources] = useState(['facebook'])
+  const [enabledSources, setEnabledSources] = useState(['craigslist'])
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
