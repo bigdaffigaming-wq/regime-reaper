@@ -169,8 +169,13 @@ async def run_scan():
                 db.refresh(listing)
                 found_count += 1
 
-                # Run analysis
+                # Run analysis — skip if already exists
                 try:
+                    existing_analysis = db.query(Analysis).filter(Analysis.listing_id == listing.id).first()
+                    if existing_analysis:
+                        logger.debug(f"Analysis already exists for listing {listing.id}, skipping")
+                        continue
+
                     analysis_data = _build_analysis(
                         {
                             "price": listing.price,
