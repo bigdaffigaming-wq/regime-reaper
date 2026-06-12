@@ -113,6 +113,7 @@ export default function SearchCenter() {
     setError(null)
     setResults([])
     try {
+      console.log('Search request:', { query: form.query, sources: enabledSources })
       const res = await api.searchAll({
         query: form.query,
         location: form.location,
@@ -122,12 +123,14 @@ export default function SearchCenter() {
         max_mileage: Number(form.max_mileage),
         sources: enabledSources,
       })
+      console.log('Search response:', res.data)
       setResults(res.data.listings || [])
       if ((res.data.listings || []).length === 0) {
         setError('No results found. Try a broader search or different keywords.')
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Search failed. Check backend is running.')
+      console.error('Search error:', err.message, err.response?.data)
+      setError(err.response?.data?.detail || err.message || 'Search failed. Check backend is running.')
     } finally {
       setLoading(false)
     }
